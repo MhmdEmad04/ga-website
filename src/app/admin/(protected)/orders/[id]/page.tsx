@@ -1,0 +1,13 @@
+import Link from 'next/link';
+import Image from 'next/image';
+import { notFound } from 'next/navigation';
+import { getOrder, statuses } from '@/lib/server/store';
+import { pageAdmin } from '@/lib/server/http';
+import { money, colors } from '@/lib/catalog';
+import { OrderActions } from '@/components/admin-controls';
+import { NotificationStatus } from '@/components/notification-status';
+export default async function Page({params}:{params:Promise<{id:string}>}){
+  await pageAdmin();const {id}=await params;if(!/^[0-9a-f-]{36}$/.test(id))notFound();const order=await getOrder(id);if(!order)notFound();
+  const phone=`20${order.customer.phone.slice(1)}`;const text=`أهلًا ${order.customer.name}، معاكِ Garbalia لتأكيد طلب رقم ${order.number}. إجمالي الطلب ${order.total} جنيه شامل الشحن. هل نبدأ التجهيز؟`;
+  return <><Link href="/admin" className="text-link">الرجوع للطلبات</Link><header className="admin-section-heading"><h2 dir="ltr">{order.number}</h2><span className="status-badge">{statuses[order.status]}</span></header><div className="admin-order-grid"><section className="admin-panel"><h2>بيانات العميل</h2><dl><dt>الاسم</dt><dd>{order.customer.name}</dd><dt>الموبايل</dt><dd dir="ltr">{order.customer.phone}</dd><dt>العنوان</dt><dd>{order.customer.governorate}، {order.customer.city}، {order.customer.address}</dd><dt>ملاحظات</dt><dd>{order.customer.notes||'بدون'}</dd></dl><a className="button" href={`https://wa.me/${phone}?text=${encodeURIComponent(text)}`} target="_blank" rel="noopener noreferrer">فتح واتساب للتأكيد</a></section><section className="admin-panel"><h2>بنود الطلب</h2>{order.items.map((item)=><div className="admin-order-item" key={`${item.product_id}-${item.color}`}><Image src={item.image} width={75} height={75} alt={item.name}/><div><strong>{item.name}</strong><p>{colors.find((c)=>c.id===item.color)?.name} · {item.quantity} قطعة</p></div><span>{money(item.unit_price*item.quantity)}</span></div>)}<div className="summary-row"><span>المنتجات</span><strong>{money(order.subtotal)}</strong></div><div className="summary-row"><span>الشحن</span><strong>{money(order.shipping)}</strong></div><div className="summary-row summary-total"><span>الإجمالي</span><strong>{money(order.total)}</strong></div><p>الدفع عند الاستلام · {order.payment_status==='collected'?'تم تسجيل التحصيل':'لم يتم تسجيل التحصيل'}</p></section></div><OrderActions id={id} status={order.status} payment={order.payment_status}/><NotificationStatus orderId={id}/><section className="admin-panel"><h2>سجل الطلب</h2><ol className="order-history">{order.events.map((event,index)=><li key={index}><span>{event.action}</span><small>{new Date(event.created_at).toLocaleString('ar-EG',{timeZone:'Africa/Cairo'})}</small></li>)}</ol></section></>;
+}

@@ -1,0 +1,4 @@
+"use client";
+import {useState}from'react';
+import{useRouter}from'next/navigation';
+export function NotificationRetry({orderId,channel}:{orderId:string;channel:string}){const router=useRouter();const[busy,setBusy]=useState(false);const[error,setError]=useState('');return <><button disabled={busy} className="text-link" onClick={async()=>{setBusy(true);setError('');try{const response=await fetch('/api/admin/notifications',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({orderId,channel})});const data=await response.json();if(!response.ok)throw new Error(data.error);router.refresh();}catch(error){setError(error instanceof Error?error.message:'تعذّر الاتصال.');}finally{setBusy(false);}}}>إعادة محاولة الإشعار</button>{error&&<p role="alert" className="form-message">{error}</p>}</>;}

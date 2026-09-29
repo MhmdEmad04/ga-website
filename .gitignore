@@ -1,0 +1,12 @@
+node_modules/
+.next/
+out/
+test-results/
+playwright-report/
+.env*
+!.env.example
+*.tsbuildinfo
+*.log
+.cache/
+.data/
+.local-admin.txt
